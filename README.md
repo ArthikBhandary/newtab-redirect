@@ -66,4 +66,4 @@ The add-on ID is `newtab-redirect@arthik`. Change it before the first submission
 
 ## License
 
-Public domain, via [The Unlicense](LICENSE). Do whatever you want with it.
+[MIT](LICENSE).
