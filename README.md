@@ -63,3 +63,7 @@ The add-on ID is `newtab-redirect@arthik`. Change it before the first submission
 - In embed mode, links from the chosen site to *other* sites that block framing will fail inside the frame, because host access covers only the saved origin. Middle-click those links to open them in a new tab.
 - Embedded pages may use partitioned cookies, so a site can show you as logged out inside the new tab.
 - Sites that use JavaScript to break out of frames will still escape the embed.
+
+## License
+
+Public domain, via [The Unlicense](LICENSE). Do whatever you want with it.
