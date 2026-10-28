@@ -1,7 +1,8 @@
 const $ = (id) => document.getElementById(id);
-browser.storage.local.get({ url: "", embed: true }).then(({ url, embed }) => {
+browser.storage.local.get({ url: "", embed: true, css: "" }).then(({ url, embed, css }) => {
   $("url").value = url;
   $("embed").checked = embed;
+  $("css").value = css;
 });
 $("f").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -11,6 +12,6 @@ $("f").addEventListener("submit", async (e) => {
     $("status").textContent = "Embedding needs access to that site";
     return;
   }
-  await browser.storage.local.set({ url, embed });
+  await browser.storage.local.set({ url, embed, css: $("css").value });
   $("status").textContent = "Saved";
 });
