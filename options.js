@@ -7,8 +7,10 @@ browser.storage.local.get({ url: "", embed: true, css: "" }).then(({ url, embed,
 $("f").addEventListener("submit", async (e) => {
   e.preventDefault();
   const url = $("url").value, embed = $("embed").checked;
+  // Whole site, not just the typed origin: sites redirect apex <-> www and http -> https.
+  const host = new URL(url).hostname, site = /^[\d.]+$|^\[/.test(host) ? host : "*." + host.replace(/^www\./, "");
   // Must be called synchronously in the user gesture, before any other await.
-  if (embed && !(await browser.permissions.request({ origins: [new URL(url).origin + "/*"] }))) {
+  if (embed && !(await browser.permissions.request({ origins: [`*://${site}/*`] }))) {
     $("status").textContent = "Embedding needs access to that site";
     return;
   }

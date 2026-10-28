@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "New Tab Redirect",
-  "version": "1.4",
+  "version": "1.4.1",
   "permissions": [
     "storage",
     "webRequest",
@@ -24,6 +24,7 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "newtab-redirect@arthik",
+      "strict_min_version": "140.0",
       "data_collection_permissions": {
         "required": [
           "none"

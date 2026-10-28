@@ -2,43 +2,48 @@
 
 A small Firefox add-on that opens a URL of your choice in every new tab.
 
-- **Embed mode (default):** the page is shown inside the new tab, so the address bar stays empty and focused. Whatever you start typing there is never overwritten.
-- **Redirect mode:** the new tab navigates to the URL. This works for every site, but the address bar fills with the URL once the page loads.
+- **Embed mode (default):** the page is shown inside the new tab, so the address bar stays empty and focused and never overwrites what you start typing. You can also add your own CSS to the page, for example a dark mode.
+- **Redirect mode:** the new tab navigates to the URL. Works with every site, but the address bar fills with the URL once the page loads.
 
-In embed mode you can also add your own CSS to the embedded page, for example a dark mode.
-
-No build step, no dependencies, no tracking.
+No build step, no dependencies, no tracking. Requires Firefox 140 or later.
 
 ## Usage
 
 1. Install the add-on.
 2. Open `about:addons` → **New Tab Redirect** → **Preferences**.
 3. Enter a URL, choose embed or redirect, and click **Save**. In embed mode, Firefox asks for access to that site (see [Permissions](#permissions)).
-4. Optionally, in embed mode, add CSS in the **Custom CSS** box.
+4. Optional, embed mode only: add CSS in the **Custom CSS** box.
 
-Until a URL is saved, new tabs are blank.
+Until a URL is saved, new tabs are blank. Changes apply from the next new tab.
 
 ### Custom CSS
 
-Other extensions (Stylus, Dark Reader, …) can't modify the add-on's new tab page, so styling goes here instead. The CSS is applied as a user stylesheet, so add `!important` to a rule to override the site's own styles.
+The CSS is added to the add-on's own new tab page, not to the embedded site, so it styles the `iframe` element around the site. It applies instantly and works for any site, but it can't target elements inside the site.
 
 A quick dark mode for any site:
 
 ```css
-html { filter: invert(1) hue-rotate(180deg); }
-img, video, picture { filter: invert(1) hue-rotate(180deg); }
+iframe { filter: invert(1) hue-rotate(180deg); }
 ```
 
-For a site that uses a class or attribute for its own dark theme, targeting that is usually cleaner than inverting.
+This inverts images and videos too. To restyle the site itself, use an extension like Stylus.
 
-## Files
+## Limitations
 
-| File | Purpose |
+- Some sites still can't be embedded: those that break out of frames with JavaScript, that only work in a top-level tab, or that use a service worker (e.g. YouTube), whose responses bypass the header removal. Use redirect mode for them.
+- Embedded pages may use partitioned cookies, so a site can show you as logged out inside the new tab.
+- Links and form submissions leave embed mode and load in the tab itself, but only once the page has finished loading. Links clicked earlier, and JavaScript navigations, stay inside the frame.
+- Custom CSS styles the frame as a whole (filters, size, borders), not the site's own elements.
+
+## Permissions
+
+| Permission | Why it's needed |
 |---|---|
-| `manifest.json` | Add-on manifest (Manifest V2) |
-| `newtab.html`, `newtab.js` | The new tab page; embeds or redirects to the saved URL, and injects the link fix and custom CSS into the embedded frame |
-| `options.html`, `options.js` | Preferences page |
-| `background.js` | Removes frame-blocking headers, only for the embedded frame |
+| `storage` | Saves the URL, the embed/redirect setting and the custom CSS. Stored locally, never sent anywhere. |
+| `chrome_url_overrides.newtab` | Replaces the new tab page with `newtab.html`. |
+| `webRequest`, `webRequestBlocking` | Many sites send `X-Frame-Options` or a CSP `frame-ancestors` header that blocks embedding. `background.js` removes those two headers **only** for `sub_frame` responses whose parent is this add-on's own new tab page. Other pages, frames and headers are untouched. |
+| `<all_urls>` (optional) | Never granted at install. Saving a URL in embed mode asks for access to **that one site** only, including its subdomains, because sites often redirect to `www.` or from http to https (e.g. `*://*.google.com/*`); it's declared as `<all_urls>` because you can pick any site. That access lets the add-on rewrite the headers above and inject a `<base target="_top">` tag into the embedded page. Redirect mode needs no host permission. |
+
 ## Development
 
 ```sh
@@ -49,30 +54,22 @@ npx web-ext build    # package into web-ext-artifacts/
 
 Or load it by hand: `about:debugging` → **This Firefox** → **Load Temporary Add-on** → select `manifest.json`.
 
-## Permissions
-
-| Permission | Why it's needed |
+| File | Purpose |
 |---|---|
-| `storage` | Saves the chosen URL, the embed/redirect setting and the custom CSS. Stored locally only, never sent anywhere. |
-| `chrome_url_overrides.newtab` | Replaces the new tab page with `newtab.html`. This is the core feature. |
-| `webRequest`, `webRequestBlocking` | Many sites send `X-Frame-Options` or a CSP `frame-ancestors` header that stops them from being embedded. In embed mode, `background.js` removes those two headers, and **only** for `sub_frame` responses whose parent document is this add-on's own new tab page (`documentUrl` starts with the add-on's `moz-extension://` URL). Other pages, frames and headers are untouched. |
-| `<all_urls>` (optional) | Never granted at install. When you save a URL in embed mode, the add-on asks for access to **that one origin** only (e.g. `https://news.ycombinator.com/*`). It is listed as `<all_urls>` only because the user can pick any site. The same per-origin access lets the new tab page inject into its own embedded frame: a `<base target="_top">` tag so links open in the tab, and the user's custom CSS via `tabs.insertCSS`. Without it, neither the header rewrite nor the injection can run for that site. Redirect mode needs no host permission. |
-
-## Limitations
-
-- Some sites still can't be embedded: those that break out of frames with JavaScript, or that only work in a top-level tab. Use redirect mode for them.
-- Embedded pages may use partitioned cookies, so a site can show you as logged out inside the new tab.
-- Links open in the tab itself (leaving embed mode) once the page has loaded. Links clicked before that, and JavaScript navigations, stay inside the frame.
-- Custom CSS:
-  - works in embed mode only;
-  - is applied after the page loads, so the page briefly shows unstyled;
-  - styles only the embedded page itself, not frames nested inside it;
-  - takes effect from the next new tab after you save.
+| `manifest.json` | Add-on manifest (Manifest V2) |
+| `newtab.html`, `newtab.js` | New tab page: embeds or redirects to the saved URL, applies the custom CSS, and injects the link fix into the frame |
+| `options.html`, `options.js` | Preferences page |
+| `background.js` | Strips frame-blocking headers for the embedded frame only |
 
 ## Release notes
 
+**1.4.1**
+- Custom CSS now styles the frame around the embedded page instead of the page itself. It applies instantly and works for every site.
+- Embed mode asks for access to the whole site, including subdomains, so sites that redirect (e.g. `google.com` → `www.google.com`) can be embedded. Save the URL again after updating.
+- Requires Firefox 140 or later.
+
 **1.4**
-- New: **Custom CSS** box on the options page. The CSS is applied to the embedded page on every new tab, so you can add a dark mode or hide clutter. Embed mode only.
+- New **Custom CSS** box on the options page, applied to the embedded page on every new tab. Embed mode only.
 
 **1.3**
 - Links in the embedded page now open in the tab itself instead of inside the frame.
