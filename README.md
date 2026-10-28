@@ -26,7 +26,13 @@ A quick dark mode for any site:
 iframe { filter: invert(1) hue-rotate(180deg); }
 ```
 
-This inverts images and videos too. To restyle the site itself, use an extension like Stylus.
+Or invert the whole new tab page, which also turns the white background shown while the site loads dark:
+
+```css
+html { filter: invert(1) hue-rotate(180deg); }
+```
+
+Both invert images and videos too. To restyle the site itself, use an extension like Stylus.
 
 ## Limitations
 
@@ -42,7 +48,7 @@ This inverts images and videos too. To restyle the site itself, use an extension
 | `storage` | Saves the URL, the embed/redirect setting and the custom CSS. Stored locally, never sent anywhere. |
 | `chrome_url_overrides.newtab` | Replaces the new tab page with `newtab.html`. |
 | `webRequest`, `webRequestBlocking` | Many sites send `X-Frame-Options` or a CSP `frame-ancestors` header that blocks embedding. `background.js` removes those two headers **only** for `sub_frame` responses whose parent is this add-on's own new tab page. Other pages, frames and headers are untouched. |
-| `<all_urls>` (optional) | Never granted at install. Saving a URL in embed mode asks for access to **that one site** only, including its subdomains, because sites often redirect to `www.` or from http to https (e.g. `*://*.google.com/*`); it's declared as `<all_urls>` because you can pick any site. That access lets the add-on rewrite the headers above and inject a `<base target="_top">` tag into the embedded page. Redirect mode needs no host permission. |
+| `<all_urls>` (optional) | Never granted at install. Saving a URL in embed mode asks for access to **that one site** only, including its subdomains, because sites often redirect to `www.` or from http to https (e.g. `*://*.google.com/*`; a `www.` URL asks for the `www.` host and its subdomains plus the bare domain, e.g. `*://*.www.google.com/*` and `*://google.com/*`); it's declared as `<all_urls>` because you can pick any site. That access lets the add-on rewrite the headers above and inject a `<base target="_top">` tag into the embedded page. Redirect mode needs no host permission. |
 
 ## Development
 
@@ -62,6 +68,12 @@ Or load it by hand: `about:debugging` → **This Firefox** → **Load Temporary 
 | `background.js` | Strips frame-blocking headers for the embedded frame only |
 
 ## Release notes
+
+**1.4.2**
+- For `www.` URLs, embed mode now asks for the `www.` host plus the bare domain, never a wildcard on the bare domain (so `www.co.uk` can't ask for every `.co.uk` site).
+- The options page shows an error if Firefox rejects the permission request, instead of failing silently.
+- When the link fix can't be applied, a warning appears in the console.
+- The Custom CSS placeholder and label now say the CSS styles the frame, not the site's elements.
 
 **1.4.1**
 - Custom CSS now styles the frame around the embedded page instead of the page itself. It applies instantly and works for every site.

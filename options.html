@@ -3,7 +3,7 @@
 <form id="f">
   <label>New tab URL <input id="url" type="url" required placeholder="https://example.com" size="40"></label>
   <p><label><input id="embed" type="checkbox"> Embed page (address bar stays untouched; some sites refuse to be embedded)</label></p>
-  <p><label>Custom CSS (embed mode only)<br><textarea id="css" rows="10" cols="60" placeholder="html { filter: invert(1) hue-rotate(180deg); }"></textarea></label></p>
+  <p><label>Custom CSS (embed mode only; styles the frame, not the site's elements)<br><textarea id="css" rows="10" cols="60" placeholder="Dark mode, either:&#10;iframe { filter: invert(1) hue-rotate(180deg); }&#10;html { filter: invert(1) hue-rotate(180deg); }"></textarea></label></p>
   <button>Save</button> <span id="status"></span>
 </form>
 <script src="options.js"></script>
